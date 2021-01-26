@@ -1,5 +1,5 @@
 ## Question 2
-rankhospital <- function(state, outcome, num = "best") {
+rankhospital <- function(state, outcome, num = 1) {
   ## Check if the state is valid
   outcome.data <- read.csv("outcome-of-care-measures.csv", colClasses = "character")
   if (! state %in% outcome.data$State) {
@@ -8,6 +8,8 @@ rankhospital <- function(state, outcome, num = "best") {
   if (! outcome %in% c("heart attack", "heart failure", "pneumonia")) {
     stop("invalid outcome")}
   ## convert initial character data to numeric
+  ## vector all states (length = 54)
+  all.states <- unique(outcome.data$State)
   ## "Heart Attack"
   outcome.data[, 11] <- as.numeric(outcome.data[, 11])
   ## "Heart Failure"
@@ -26,19 +28,35 @@ rankhospital <- function(state, outcome, num = "best") {
   index_state_hf <- which(state == names(split_hf))
   index_state_pn <- which(state == names(split_pn))
   ## rank hospitals
-  order_ha <- split_ha[[index_state_ha]][order(split_ha[[index_state_ha]][3]), 1:3] # Cool guys, looks okay
-  order_hf <- split_hf[[index_state_hf]][order(split_hf[[index_state_hf]][3]), 1:3]
-  order_pn <- split_pn[[index_state_pn]][order(split_pn[[index_state_pn]][3]), 1:3]
-  
+  order_ha <- split_ha[[index_state_ha]][order(split_ha[[index_state_ha]][3], split_ha[[index_state_ha]][1]), 1:3] # break ties Cool guys, looks okay
+  order_hf <- split_hf[[index_state_hf]][order(split_hf[[index_state_hf]][3], split_hf[[index_state_hf]][1]), 1:3]
+  order_pn <- split_pn[[index_state_pn]][order(split_pn[[index_state_pn]][3], split_pn[[index_state_pn]][1]), 1:3]
+  if (outcome %in% c("heart attack") & num %in% c("worst")) {
+    order.no.na.ha <- order_ha[!is.na(order_ha[, 3]), 1:3]
+    worst.ha <- length(order.no.na.ha[, 3])
+    rkhos.ha.worst <- order_ha[worst.ha, 1]
+    return(rkhos.ha.worst)}
+  if (outcome %in% c("heart failure") & num %in% c("worst")) {
+    order.no.na.hf <- order_hf[!is.na(order_hf[, 3]), 1:3]
+    worst.hf <- length(order.no.na.hf[, 3])
+    rkhos.hf.worst <- order_hf[worst.hf, 1]
+    return(rkhos.hf.worst)}
+  if (outcome %in% c("pneumonia") & num %in% c("worst")) {
+    order.no.na.pn <- order_pn[!is.na(order_pn[, 3]), 1:3]
+    worst.pn <- length(order.no.na.pn[, 3])
+    rkhos.pn.worst <- order_pn[worst.pn, 1]
+    return(rkhos.pn.worst)}
   ## out put rank #
   if (outcome %in% c("heart attack")) {
     rkhos.ha <- order_ha[num, 1]
     return(rkhos.ha)}
   
   if (outcome %in% c("heart failure")) {
-    return(best_hf)}
+    rkhos.hf <- order_hf[num, 1]
+    return(rkhos.hf)}
   
   if (outcome %in% c("pneumonia")) {
-    return(best_pn)}
+    rkhos.pn <- order_pn[num, 1]
+    return(rkhos.pn)}
   ## Read outcome data
 }
